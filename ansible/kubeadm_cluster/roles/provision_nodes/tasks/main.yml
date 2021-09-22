@@ -1,0 +1,106 @@
+
+---
+- name: Enable br_netfilter
+  shell: modprobe br_netfilter
+
+- name: Let iptables see bridged traffic
+  copy:
+    src: '{{ role_path }}/files/k8s.conf'
+    dest: /etc/sysctl.d/k8s.conf
+
+- name: reload sysctl
+  shell: sysctl --system
+
+- name: Install yum utils
+  yum:
+    name: yum-utils
+    state: latest
+
+- name: Add Docker repo
+  shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+- name: Install docker
+  shell: yum install docker-ce -y
+
+- name: Start docker service
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  
+- name: stop firewall
+  shell:
+    cmd: systemctl stop firewalld
+
+- name: copy kubernetes repo
+  copy:
+    src: '{{ role_path}}/files/kubernetes.repo'
+    dest: /etc/yum.repos.d/kubernetes.repo
+
+- name: disbale selinux
+  shell: 
+    cmd: setenforce 0
+
+- name: disbale selinux
+  shell: 
+    cmd: sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+- name: install kubeadm kubelet and kubectl
+  shell: 
+    cmd: yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+
+- name: disbale swap
+  shell: 
+    cmd: swapoff -a
+
+- name: enable kubelet
+  shell: 
+    cmd: systemctl enable --now kubelet
+
+- name: start kubelet
+  shell: 
+    cmd: systemctl start kubelet
+
+- name: Initialize master node
+  shell:
+    cmd: kubeadm init --apiserver-advertise-address=192.168.50.10
+  when: inventory_hostname == 'k8s-master.markel.local'
+ 
+- name: configure kubectl 
+  shell:
+    cmd: '{{ item }}'
+  with_items:
+    - mkdir -p $HOME/.kube
+    - sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    - sudo chown $(id -u):$(id -g) $HOME/.kube/config
+  when: inventory_hostname == 'k8s-master.markel.local'
+
+- name: intall weave
+  shell: 
+    cmd: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"  
+  when: inventory_hostname == 'k8s-master.markel.local'
+
+- name: Sleep for 300 seconds and continue with play
+  wait_for:
+    timeout: 120
+
+- name: print join command
+  shell: 
+    cmd: kubeadm token create --print-join-command
+  register: join_cmd
+  when: inventory_hostname == 'k8s-master.markel.local'
+
+- name: Join nodes to cluster
+  shell: 
+    cmd: "{{ hostvars['k8s-master.markel.local']['join_cmd']['stdout'] }}"
+  when: inventory_hostname != 'k8s-master.markel.local'
+
+- name: Install nfs module for storage
+  yum:
+    name: nfs-utils
+    state: present
+
+- name: start nfs-utils
+  systemd:
+    name: nfs-utils
+    state: started

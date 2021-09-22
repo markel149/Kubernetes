@@ -1,0 +1,12 @@
+- name: Create encription files
+  hosts: adminnode
+  user: root
+  roles:
+    - 05_encription_keys/generate_key
+  
+
+- name: Create encription files
+  hosts: master
+  user: root
+  roles:
+    - 05_encription_keys/copy_encription_file

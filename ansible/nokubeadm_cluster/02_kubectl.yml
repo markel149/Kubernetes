@@ -1,0 +1,6 @@
+- name: Install kubectl in all nodes
+  hosts: nodes
+  user: root
+  roles:
+    - 02_kubectl_install
+     

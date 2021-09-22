@@ -1,0 +1,5 @@
+- name: Create encription files
+  hosts: master
+  user: root
+  roles:
+    - 07_kubernetes_control_plane

@@ -1,0 +1,10 @@
+- name: Copy certificates to master nodes
+  copy:
+    src: '{{ item }}'
+    dest: /root
+    owner: root
+    group: root
+    mode: 0644
+  with_fileglob:
+    - /Users/morallo/Documents/{{ certificates_folder }}/*.key
+    - /Users/morallo/Documents/{{ certificates_folder }}/*.crt

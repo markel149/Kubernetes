@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jellyfin-service
+  name: jellyfin-service
+spec:
+  ports:
+  - name: web
+    port: 80
+    protocol: TCP
+    targetPort: 8096
+    nodePort: 32001
+  selector:
+    app: jellyfin
+  type: NodePort
+status:
+  loadBalancer: {}

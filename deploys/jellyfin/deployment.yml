@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin
+  labels:
+    app: jellyfin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyfin
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      containers:
+        
+      containers:
+      - image: jellyfin/jellyfin
+        name: jellyfin
+        ports:
+        - containerPort: 8096
+        resources: {}
+        volumeMounts:
+          - name: jellyfin-pvc
+            mountPath: /config
+            subPath: config
+          - name: jellyfin-pvc
+            mountPath: /media
+            subPath: media
+          - name: jellyfin-pvc
+            mountPath: cache
+            subPath: cache
+      volumes:
+      - name: jellyfin-pvc
+        persistentVolumeClaim:
+          claimName: jellyfin-pvc

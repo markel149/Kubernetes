@@ -1,0 +1,7 @@
+- name: Install kubectl in all nodes
+ # hosts: worker
+  hosts: k8snodes
+  user: root
+  roles:
+    - 01_verify_enviroment
+     

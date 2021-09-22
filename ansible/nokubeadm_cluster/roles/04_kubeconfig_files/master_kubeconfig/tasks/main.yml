@@ -1,0 +1,11 @@
+- name: Copy kubeconfig files for master nodes
+  template:
+    src: '{{ role_path }}/templates/{{ item }}'
+    dest: /root
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - admin.kubeconfig
+    - kube-controller-manager.kubeconfig
+    - kube-scheduler.kubeconfig

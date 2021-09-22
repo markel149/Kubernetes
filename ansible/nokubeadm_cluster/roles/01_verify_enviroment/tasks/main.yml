@@ -1,0 +1,59 @@
+---
+- name: Install yum utils
+  yum:
+    name: yum-utils
+    state: latest
+
+- name: Install device-mapper utils
+  yum:
+    name: device-mapper-persistent-data
+    state: latest
+
+- name: Install lvm2
+  yum:
+    name: lvm2
+    state: latest
+  
+- name: Add Docker repo
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+
+- name: Enable Docker Edge repo
+  ini_file:
+    dest: /etc/yum.repos.d/docker-ce.repo
+    section: 'docker-ce-nightly'
+    option: enabled
+    value: 0
+  become: yes
+
+- name: Install docker
+  shell:
+    cmd: |
+      dnf install --nobest -y docker-ce
+    warn: false
+  register: result
+  changed_when: "'Complete!' in result.stdout"
+
+- name: Start docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Install pip3
+  yum:
+    name: python3-pip
+    state: present
+
+- name: Install SDK Docker for python
+  pip:
+    name: docker
+    executable: pip3
+
+- name: Enable docker service
+  systemd:
+    name: docker
+    enabled: yes
+    masked: no

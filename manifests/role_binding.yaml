@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  creationTimestamp: "2020-12-13T19:56:01Z"
+  managedFields:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:roleRef:
+        f:apiGroup: {}
+        f:kind: {}
+        f:name: {}
+    manager: kubectl-create
+    operation: Update
+    time: "2020-12-13T19:56:01Z"
+  name: test-binding
+  namespace: default
+  resourceVersion: "95018"
+  uid: cbea4052-da7d-40b3-9291-2667a9dfd95f
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: test-role

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: elastic-svc
+  name: test-svc
+spec:
+  ports:
+  - name: elastic-svc
+    nodePort: 32323
+    port: 9200
+    protocol: TCP
+    targetPort: 9200
+  selector:
+    app: elastic
+  type: NodePort
+status:
+  loadBalancer: {}

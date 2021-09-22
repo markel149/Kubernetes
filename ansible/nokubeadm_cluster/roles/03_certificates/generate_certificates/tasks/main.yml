@@ -1,0 +1,66 @@
+---
+- name: create certificates folder
+  file:
+    path: '/Users/morallo/Documents/{{ certificates_folder }}'
+    state: directory
+
+- name: Generate an OpenSSL private key 
+  openssl_privatekey:
+    path: '/Users/morallo/Documents/{{ certificates_folder }}/{{ item }}.key'
+    size: 2048
+  with_items:
+    - ca
+    - admin
+    - kube-controller-manager
+    - kube-proxy
+    - kube-scheduler
+    - kube-apiserver
+    - etcd-server
+    - service-account
+
+- name: Generate an OpenSSL Certificate Signing Request
+  openssl_csr:
+    path: '/Users/morallo/Documents/{{ certificates_folder }}/{{ item.name }}.csr'
+    privatekey_path: '/Users/morallo/Documents/{{ certificates_folder }}/{{ item.name }}.key'
+    common_name: '{{ item.cn }}'
+    organizational_unit_name: '{{ item.ou }}'
+  with_items:
+    - { name: ca, cn: KUBERNETES-CA, ou: '' }
+    - { name: admin, cn: admin, ou: 'system:masters' }
+    - { name: kube-controller-manager,cn: system:kube-controller-manager, ou: '' }
+    - { name: kube-proxy,cn: system:kube-proxy, ou: '' }
+    - { name: kube-scheduler,cn: system:kube-scheduler, ou: '' }
+    - { name: service-account, cn: service-accounts, ou: '' }
+
+- name: This command will change the working directory to somedir/ and will only run when somedir/somelog.txt doesn't exist
+  shell: 'openssl x509 -req -in /Users/morallo/Documents/{{ certificates_folder }}/{{ item.name }}.csr -signkey /Users/morallo/Documents/{{ certificates_folder }}/{{ item.name }}.key -CAcreateserial  -out /Users/morallo/Documents/{{ certificates_folder }}/{{ item.name }}.crt -days 2000'
+  with_items:
+    - { name: ca, cn: KUBERNETES-CA, ou: '' }
+    - { name: admin, cn: admin, ou: 'system:masters' }
+    - { name: kube-controller-manager,cn: system:kube-controller-manager, ou: '' }
+    - { name: kube-proxy,cn: system:kube-proxy, ou: '' }
+    - { name: kube-scheduler,cn: system:kube-scheduler, ou: '' }
+    - { name: service-account, cn: service-accounts, ou: '' }
+
+- name: Copy config file
+  copy:
+    src: '{{ role_path }}/files/{{ item }}.cnf'
+    dest: '/Users/morallo/Documents/{{ certificates_folder }}/'
+    mode: 0777
+    owner: morallo
+    group: staff
+  with_items:
+    - openssl
+    - openssl-etcd
+  
+- name: This command will change the working directory to somedir/ and will only run when somedir/somelog.txt doesn't exist
+  shell: 'openssl req -new -key /Users/morallo/Documents/{{ certificates_folder }}/kube-apiserver.key -subj "/CN=kube-apiserver" -out /Users/morallo/Documents/{{ certificates_folder }}/kube-apiserver.csr -config /Users/morallo/Documents/{{ certificates_folder }}/openssl.cnf'
+
+- name: This command will change the working directory to somedir/ and will only run when somedir/somelog.txt doesn't exist
+  shell: 'openssl req -new -key /Users/morallo/Documents/{{ certificates_folder }}/etcd-server.key -subj "/CN=etcd-server" -out /Users/morallo/Documents/{{ certificates_folder }}/etcd-server.csr -config /Users/morallo/Documents/{{ certificates_folder }}/openssl-etcd.cnf'
+ 
+- name: This command will change the working directory to somedir/ and will only run when somedir/somelog.txt doesn't exist
+  shell: 'openssl x509 -req -in /Users/morallo/Documents/{{ certificates_folder }}/kube-apiserver.csr -CA /Users/morallo/Documents/{{ certificates_folder }}/ca.crt -CAkey /Users/morallo/Documents/{{ certificates_folder }}/ca.key -CAcreateserial  -out /Users/morallo/Documents/{{ certificates_folder }}/kube-apiserver.crt -extensions v3_req -extfile /Users/morallo/Documents/{{ certificates_folder }}/openssl.cnf -days 2000'
+
+- name: This command will change the working directory to somedir/ and will only run when somedir/somelog.txt doesn't exist
+  shell: 'openssl x509 -req -in /Users/morallo/Documents/{{ certificates_folder }}/etcd-server.csr -CA /Users/morallo/Documents/{{ certificates_folder }}/ca.crt -CAkey /Users/morallo/Documents/{{ certificates_folder }}/ca.key -CAcreateserial  -out /Users/morallo/Documents/{{ certificates_folder }}/etcd-server.crt -extensions v3_req -extfile /Users/morallo/Documents/{{ certificates_folder }}/openssl-etcd.cnf -days 2000'

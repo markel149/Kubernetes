@@ -1,0 +1,5 @@
+- name: Create encription files
+  hosts: lb
+  user: root
+  roles:
+    - 08_haproxy

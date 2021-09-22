@@ -1,0 +1,12 @@
+- name: Generate encription key
+  shell: head -c 32 /dev/urandom | base64
+  register: result
+  run_once: true
+
+- name: copy encryption config file
+  template:
+    src: '{{ role_path }}/templates/encryption-config.yaml'
+    dest: /root
+    owner: root
+    group: root
+    mode: 0644

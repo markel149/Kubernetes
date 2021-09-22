@@ -1,0 +1,5 @@
+- name: Deploy kubernetes cluster
+  hosts: all
+  user: root
+  roles:
+    - provision_nodes

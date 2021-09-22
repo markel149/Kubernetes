@@ -1,0 +1,5 @@
+- name: Create encription files
+  hosts: master
+  user: root
+  roles:
+    - 06_etcd_bootstrap

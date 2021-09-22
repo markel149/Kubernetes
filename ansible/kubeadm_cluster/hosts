@@ -1,0 +1,6 @@
+[master]
+k8s-master.markel.local
+[worker]
+k8s-w01.markel.local
+k8s-w02.markel.local
+k8s-w03.markel.local

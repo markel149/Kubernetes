@@ -1,0 +1,7 @@
+- name: Copy kubeconfig files for master nodes
+  template:
+    src: '{{ role_path }}/templates/kube-proxy.kubeconfig'
+    dest: /root
+    owner: root
+    group: root
+    mode: 0644

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: es-config
+data:
+  elasticsearch.yml: |
+    cluster.name: my-elastic-cluster
+    network.host: "0.0.0.0"
+    bootstrap.memory_lock: false
+    discovery.type: single-node
+    xpack.security.enabled: false
+    xpack.monitoring.enabled: false
+    http.port: 9200

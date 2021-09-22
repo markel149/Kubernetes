@@ -1,0 +1,12 @@
+- name: Install kubectl in all nodes
+  hosts: localhost
+  user: root
+  roles:
+    - 03_certificates/generate_certificates
+
+- name: Copy certs to master nodes
+  hosts: master
+  user: root
+  roles:
+    - 03_certificates/copy_certificates
+     

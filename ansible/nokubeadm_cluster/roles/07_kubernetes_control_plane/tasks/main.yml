@@ -1,0 +1,119 @@
+- name: open port
+  shell: firewall-cmd --permanent --add-port=6443/tcp
+- name: open port
+  shell: firewall-cmd --permanent --add-port=10251/tcp
+- name: open port
+  shell: firewall-cmd --permanent --add-port=10252/tcp  
+- name: open port
+  shell: firewall-cmd --permanent --add-port=56336/tcp  
+- name: open port
+  shell: firewall-cmd --permanent --add-port=8080/tcp  
+- name: open port
+  shell: firewall-cmd --reload
+
+- name: create kubernetes folders
+  file:
+    path: '{{ item }}'
+    state: directory
+  with_items:
+    - /var/lib/kubernetes
+    - /etc/kubernetes
+    - /etc/kubernetes/config
+
+- name: Download kubernetes controllers
+  get_url:
+    url: '{{ item }}'
+    dest: /root
+    mode: '0644'
+  with_items:
+    - "https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kube-apiserver"
+    - "https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kube-controller-manager"
+    - "https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kube-scheduler"
+    - "https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kubectl"
+
+- name: move controllers to /usr/local/bin
+  copy:
+    src: '/root/{{ item }}'
+    dest: /usr/local/bin
+    remote_src: yes
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+    - kubectl
+  
+- name: execution permision for controllers
+  shell: chmod +x /usr/local/bin/kube-apiserver /usr/local/bin/kube-controller-manager /usr/local/bin/kube-scheduler /usr/local/bin/kubectl
+
+- name: move certificates to kubernetes folder
+  copy:
+    src: '/root/{{ item }}'
+    dest: /var/lib/kubernetes/
+    remote_src: yes
+  with_items:
+    - encryption-config.yaml
+    - ca.crt
+    - ca.key
+    - etcd-server.crt
+    - etcd-server.key
+    - service-account.crt
+    - service-account.key
+    - kube-apiserver.crt
+    - kube-apiserver.key
+
+- name: copy etcd service configuration file
+  template:
+    src: '{{ role_path }}/templates/kube-apiserver.service'
+    dest: '/etc/systemd/system/kube-apiserver.service'
+    owner: root
+    group: root
+    mode: 0777
+
+- name: copy etcd service configuration file
+  copy:
+    src: '/root/kube-controller-manager.kubeconfig'
+    dest: '/var/lib/kubernetes'
+    owner: root
+    group: root
+    mode: 0777
+    remote_src: yes
+
+- name: copy etcd service configuration file
+  copy:
+    src: '/root/kube-scheduler.kubeconfig'
+    dest: '/var/lib/kubernetes'
+    owner: root
+    group: root
+    mode: 0777
+    remote_src: yes
+
+- name: copy etcd service configuration file
+  template:
+    src: '{{ role_path }}/templates/kube-scheduler.service'
+    dest: '/etc/systemd/system/kube-scheduler.service'
+    owner: root
+    group: root
+    mode: 0777
+
+- name: copy etcd service configuration file
+  template:
+    src: '{{ role_path }}/templates/kube-controller-manager.service'
+    dest: '/etc/systemd/system/kube-controller-manager.service'
+    owner: root
+    group: root
+    mode: 0777
+
+- name: reload daemons
+  systemd:
+    daemon_reload: yes 
+
+- name: start etcd
+  systemd:
+    name: '{{ item }}'
+    state: restarted
+    enabled: yes
+  with_items:
+    - kube-scheduler
+    - kube-apiserver
+    - kube-controller-manager
+
